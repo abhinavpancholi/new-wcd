@@ -347,7 +347,11 @@ export default function Sidebar({ topSlot = 'stat-cards' }) {
       {/* Bottom Slot — Region Thumbnail Widget */}
       <div className="wcd-sidebar__bottom" style={{ marginTop: 'auto' }}>
         <RegionThumbnails />
+        <div className="wcd-sidebar-footer__text">
+            The data and references shown are dummy and representative in nature, intended solely for demonstration purposes.
+        </div>
       </div>
+
     </aside>
   )
 }
