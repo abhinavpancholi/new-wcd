@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { Bell, X, Download } from 'lucide-react'
+import { Bell, X, Download, AlertTriangle } from 'lucide-react'
 import { formatIndian } from '../../utils/formatters'
 import { computeSAMAlerts, exportSAMAlertCSV } from '../../utils/samAlertUtils'
 
@@ -101,7 +101,7 @@ function GenderGapTag() {
 // ─── Summary stat chips ───────────────────────────────────────────────────────
 function SummaryChips({ summary }) {
   const chips = [
-    { label: 'Total Tracked', value: summary.total,    icon: '📍', borderColor: C.border,   valueColor: C.textPrimary, bg: '#ffffff' },
+    { label: 'Total Tracked', value: summary.total,    icon: '', borderColor: C.border,   valueColor: C.textPrimary, bg: '#ffffff' },
     { label: 'Improved',      value: summary.improved, icon: '✅', borderColor: '#86efac',   valueColor: C.green600,    bg: '#f0fdf4' },
     { label: 'Stagnant',      value: summary.stagnant, icon: '⚠️', borderColor: '#fde68a',   valueColor: C.amber600,    bg: '#fffbeb' },
     { label: 'Worsened',      value: summary.worsened, icon: '🔴', borderColor: '#fca5a5',   valueColor: C.red600,      bg: '#fef2f2' },
@@ -121,7 +121,7 @@ function SummaryChips({ summary }) {
           minWidth:     110,
           boxShadow:    '0 1px 3px rgba(0,0,0,0.04)',
         }}>
-          <div style={{ fontSize: '0.63rem', color: C.textMuted, fontWeight: 600, marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: '0.63rem', color: C.textMuted, fontWeight: 800, marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             {icon} {label}
           </div>
           <div style={{ fontSize: '1.2rem', fontWeight: 800, color: valueColor, fontFamily: 'Outfit, Inter, sans-serif' }}>
@@ -218,56 +218,88 @@ function Top50Table({ rows }) {
 }
 
 // ─── District cluster bar chart (pure CSS flex — light theme) ──────────────────
-function DistrictClusterBar({ data }) {
+function DistrictClusterBar({ data, collapsed, onToggle }) {
   if (!data || data.length === 0) return null
   const maxCount = data[0]?.count || 1
 
   return (
     <div style={{
-      padding:      '12px 18px 8px',
       borderBottom: `1px solid ${C.border}`,
       flexShrink:   0,
-      background:   '#fffbeb',
+      background:   '#ffffff',
     }}>
-      <div style={{ fontSize: '0.65rem', color: C.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
-        🏥 District Focus — Bottom 50 Concentration
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        {data.map(({ dist_name, region, count }) => {
-          const pct = (count / maxCount) * 100
-          const isHigh = count >= 5
-          return (
-            <div key={dist_name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{
-                width: 110, fontSize: '0.66rem', color: C.textSecondary, fontWeight: 600, flexShrink: 0,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }} title={`${dist_name} · ${region}`}>
-                {dist_name}
-              </div>
-              <div style={{ flex: 1, height: 14, background: '#fef3c7', borderRadius: 7, overflow: 'hidden', border: '1px solid #fde68a' }}>
+      {/* Header row with toggle */}
+      <button
+        onClick={onToggle}
+        style={{
+          width:          '100%',
+          display:        'flex',
+          alignItems:     'center',
+          justifyContent: 'space-between',
+          padding:        '8px 18px',
+          background:     '#fef2f2',
+          border:         'none',
+          borderBottom:   collapsed ? 'none' : `1px solid ${C.border}`,
+          cursor:         'pointer',
+          transition:     'background 0.15s ease',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = '#fee2e2'}
+        onMouseLeave={e => e.currentTarget.style.background = '#fef2f2'}
+      >
+        <span style={{ fontSize: '0.65rem', color: C.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {collapsed ? '▸' : '▾'} &nbsp;District Focus — Bottom 50 Concentration
+        </span>
+        <span style={{
+          fontSize: '0.6rem', fontWeight: 600, color: C.red600,
+          background: '#fee2e2', border: '1px solid #fca5a5',
+          padding: '2px 8px', borderRadius: 6,
+        }}>
+          {collapsed ? 'Show Chart' : 'Hide Chart'} &nbsp;({data.length} districts)
+        </span>
+      </button>
+
+      {/* Bars — only visible when expanded */}
+      {!collapsed && (
+        <div style={{ padding: '8px 18px 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {data.map(({ dist_name, region, count }) => {
+            const pct = (count / maxCount) * 100
+            // Intensity: higher count = darker red
+            const intensity = Math.min(1, count / maxCount)
+            const barColor = `linear-gradient(90deg, 
+              hsl(0, ${65 + intensity * 20}%, ${50 - intensity * 12}%), 
+              hsl(0, ${60 + intensity * 15}%, ${58 - intensity * 10}%))`
+            return (
+              <div key={dist_name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div style={{
-                  width:        `${pct}%`,
-                  height:       '100%',
-                  background:   isHigh
-                    ? 'linear-gradient(90deg, #dc2626, #ef4444)'
-                    : 'linear-gradient(90deg, #d97706, #f59e0b)',
-                  borderRadius: 7,
-                  transition:   'width 0.5s ease',
-                }} />
+                  width: 110, fontSize: '0.66rem', color: C.textSecondary, fontWeight: 600, flexShrink: 0,
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }} title={`${dist_name} · ${region}`}>
+                  {dist_name}
+                </div>
+                <div style={{ flex: 1, height: 14, background: '#fef2f2', borderRadius: 7, overflow: 'hidden', border: '1px solid #fecaca' }}>
+                  <div style={{
+                    width:        `${pct}%`,
+                    height:       '100%',
+                    background:   barColor,
+                    borderRadius: 7,
+                    transition:   'width 0.5s ease',
+                  }} />
+                </div>
+                <div style={{
+                  width: 24, textAlign: 'right', fontSize: '0.68rem', fontWeight: 800,
+                  color: C.red600, flexShrink: 0,
+                }}>
+                  {count}
+                </div>
               </div>
-              <div style={{
-                width: 24, textAlign: 'right', fontSize: '0.68rem', fontWeight: 800,
-                color: isHigh ? C.red600 : C.amber600, flexShrink: 0,
-              }}>
-                {count}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
+
 
 // ─── Tab 2: Bottom 50 grouped collapsible table ───────────────────────────────
 function Bottom50Table({ rows, districtCluster }) {
@@ -368,7 +400,7 @@ function Bottom50Table({ rows, districtCluster }) {
                     <td style={{ padding: '6px 8px', color: C.textMuted, textAlign: 'center', fontWeight: 600, fontSize: '0.7rem' }}>{r.rank}</td>
                     <td style={{ padding: '6px 8px', color: C.textPrimary, fontWeight: 600 }}>
                       {r.anganwadi_name}
-                      {r.gender_gap && <GenderGapTag />}
+                      {/* {r.gender_gap && <GenderGapTag />} */}
                     </td>
                     <td style={{ padding: '6px 8px', color: C.textSecondary }}>{r.block_name}</td>
                     <td style={{ padding: '6px 8px', textAlign: 'right', color: C.textPrimary, fontWeight: 500 }}>{formatIndian(r.apr_total)}</td>
@@ -402,6 +434,7 @@ export default function SamAlertModal({ open, onClose }) {
   const [loading,    setLoading]    = useState(false)
   const [error,      setError]      = useState(null)
   const [activeTab,  setActiveTab]  = useState(0) // 0 = Top50, 1 = Bottom50
+  const [clusterCollapsed, setClusterCollapsed] = useState(true) // chart hidden by default for max table space
 
   // Lazy-load alerts JSON on first open
   useEffect(() => {
@@ -495,13 +528,13 @@ export default function SamAlertModal({ open, onClose }) {
           flexShrink:   0,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Bell size={18} color='#ffffff' />
+            <AlertTriangle size={18} color='#ffffff' />
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', fontFamily: 'Outfit, Inter, sans-serif' }}>
                 Anganwadi SAM Alert Report
               </div>
-              <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
-                Apr 2025 → Oct 2025 &nbsp;·&nbsp; {formatIndian(computed.summary.total)} anganwadis tracked &nbsp;·&nbsp; FY filter does not apply to this snapshot
+              <div style={{ fontSize: '0.80rem', color: 'rgba(255,255,255,0.75)', marginTop: 2 }}>
+                Apr 2025 → Oct 2025 &nbsp;·&nbsp; {formatIndian(computed.summary.total)} anganwadis tracked
               </div>
             </div>
 
@@ -616,7 +649,7 @@ export default function SamAlertModal({ open, onClose }) {
           )}
           {alertData && activeTab === 1 && (
             <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-              <DistrictClusterBar data={computed.districtCluster} />
+              <DistrictClusterBar data={computed.districtCluster} collapsed={clusterCollapsed} onToggle={() => setClusterCollapsed(prev => !prev)} />
               <Bottom50Table rows={computed.bottom50} districtCluster={computed.districtCluster} />
             </div>
           )}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { Bell } from 'lucide-react'
+import { AlertTriangle, Bell } from 'lucide-react'
 import { formatIndian } from '../../utils/formatters'
 import SamAlertModal from './SamAlertModal'
 
@@ -67,10 +67,10 @@ export default function SamUpliftedDonut({ samData }) {
             alignItems:   'center',
             gap:          5,
             background:   'transparent',
-            border:       '1px solid #0d9488',
+            border:       '1px solid #940d0dff',
             borderRadius: 7,
             padding:      '3px 9px',
-            color:        '#0d9488',
+            color:        '#940d0dff',
             fontSize:     '0.65rem',
             fontWeight:   700,
             cursor:       'pointer',
@@ -79,15 +79,15 @@ export default function SamUpliftedDonut({ samData }) {
             lineHeight:   1,
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background = '#0d9488'
+            e.currentTarget.style.background = '#ff0202ff'
             e.currentTarget.style.color = '#fff'
           }}
           onMouseLeave={e => {
             e.currentTarget.style.background = 'transparent'
-            e.currentTarget.style.color = '#0d9488'
+            e.currentTarget.style.color = '#ff0000ff'
           }}
         >
-          <Bell size={11} />
+          <AlertTriangle size={13} />
           Anganwadi Alerts
         </button>
       </div>
