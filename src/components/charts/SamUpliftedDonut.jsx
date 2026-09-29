@@ -1,6 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import { Bell } from 'lucide-react'
 import { formatIndian } from '../../utils/formatters'
+import SamAlertModal from './SamAlertModal'
 
 /**
  * SAM Children Uplifted Donut Chart & Current Apr Baseline Stat Block
@@ -22,6 +24,7 @@ function CustomTooltip({ active, payload }) {
 }
 
 export default function SamUpliftedDonut({ samData }) {
+  const [alertOpen, setAlertOpen] = useState(false)
   if (!samData) return null
 
   const femaleDelta = samData.female_delta || 0
@@ -51,9 +54,42 @@ export default function SamUpliftedDonut({ samData }) {
   const malePct = absTotalDelta > 0 ? ((absMaleDelta / absTotalDelta) * 100).toFixed(2) : '0.00'
 
   return (
+    <>
     <div className="wcd-chart-panel" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div className="wcd-chart-panel__title">
         <span>{title}</span>
+        {/* Anganwadi Alerts ghost button — top-right of card header */}
+        <button
+          onClick={() => setAlertOpen(true)}
+          title="Anganwadi Alerts"
+          style={{
+            display:      'flex',
+            alignItems:   'center',
+            gap:          5,
+            background:   'transparent',
+            border:       '1px solid #0d9488',
+            borderRadius: 7,
+            padding:      '3px 9px',
+            color:        '#0d9488',
+            fontSize:     '0.65rem',
+            fontWeight:   700,
+            cursor:       'pointer',
+            transition:   'all 0.15s ease',
+            flexShrink:   0,
+            lineHeight:   1,
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = '#0d9488'
+            e.currentTarget.style.color = '#fff'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = '#0d9488'
+          }}
+        >
+          <Bell size={11} />
+          Anganwadi Alerts
+        </button>
       </div>
 
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 190 }}>
@@ -211,5 +247,7 @@ export default function SamUpliftedDonut({ samData }) {
         </div>
       </div>
     </div>
+    <SamAlertModal open={alertOpen} onClose={() => setAlertOpen(false)} />
+    </>
   )
 }
